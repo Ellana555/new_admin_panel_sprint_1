@@ -5,3 +5,5 @@ app/**/*.log           # Игнорировать log-файлы в app- и по
 !app/main.log          # ... кроме файла main.log 
 config/.env            # Игнорировать окружение паролей
 venv		       # Игнорировать Python - окружение 
+.vscode
+.git
