@@ -29,10 +29,12 @@ class FilmworkAdmin(admin.ModelAdmin):
     inlines = (GenreFilmworkInline, PersonFilmworkInline)
 
     list_display = (
-        "title",
         "type",
-        "creation_date",
+        "title",
+        "show_genres",
         "rating",
+        "creation_date",
     )
-    list_filter = ("type",)
+
+    list_filter = ("type", "genres")
     search_fields = ("title",)
