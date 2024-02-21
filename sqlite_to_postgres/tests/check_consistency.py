@@ -45,7 +45,7 @@ def data_sqlite():
         try:
 
             curs = conn.cursor()
-            query_g = "SELECT id, name, description FROM genre"
+            query_g = "SELECT id, name, description FROM genre ORDER BY id"
             curs.execute(query_g)
             data_g = curs.fetchall()
             list_data_g = []
@@ -53,7 +53,7 @@ def data_sqlite():
                 list_data_g.append(tuple(line))
             conn.commit()
 
-            query_gfw = "SELECT id, film_work_id, genre_id FROM genre_film_work"
+            query_gfw = "SELECT id, film_work_id, genre_id FROM genre_film_work ORDER BY id"
             curs.execute(query_gfw)
             data_gfw = curs.fetchall()
             list_data_gfw = []
@@ -106,12 +106,12 @@ def data_postgres():
         try:
 
             curs = conn.cursor()
-            query_g = "SELECT id, name, description FROM content.genre"
+            query_g = "SELECT id, name, description FROM content.genre ORDER BY id"
             curs.execute(query_g)
             data_g = curs.fetchall()
             conn.commit()
 
-            query_gfw = "SELECT id, film_work_id, genre_id FROM content.genre_film_work"
+            query_gfw = "SELECT id, film_work_id, genre_id FROM content.genre_film_work ORDER BY id"
             curs.execute(query_gfw)
             data_gfw = curs.fetchall()
             conn.commit()
@@ -170,11 +170,11 @@ def сheck_integrity():
     print('Строки в таблицах совпадают.')
 
     # Для сверки несовпавших значений (поменять на номер)
-    dl = data_lite[4]
-    dp = data_post[4]
+    dl = data_lite[1]
+    dp = data_post[1]
     count = 0
 
-    for i in range(len(data_lite[4])):
+    for i in range(len(data_lite[1])):
         if dl[i] != dp[i]:
             print('Следующие строчки не совпадают', dl[i], dp[i])
             count += 1

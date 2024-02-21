@@ -1,22 +1,17 @@
-import os
 import psycopg2
 import sqlite3
-import uuid
-from datetime import datetime
 from contextlib import contextmanager
-from dataclasses import dataclass, field, astuple
+from dataclasses import astuple
+from split_settings.tools import include
 
-now = datetime.utcnow()
-db_path = os.environ.get("DB_NAME_SQL")
 
-dsn = {
-    "dbname": os.environ.get("DB_NAME_POSTGR"),
-    "user": os.environ.get("DB_USER"),
-    "password": os.environ.get("DB_PASSWORD"),
-    "host": os.environ.get("DB_HOST"),
-    "port": os.environ.get("DB_PORT"),
-    "options": "-c search_path=content",
-}
+include(
+    "components/config.py",
+)
+
+include(
+    "components/classes_module.py",
+)
 
 
 # Подключение SQLite
@@ -39,152 +34,57 @@ def conn_postgres(**dsn):
     finally:
         conn.close()
 
-
-@dataclass
-class Film_work:
-    id: uuid.UUID = field(default_factory=uuid.uuid4)
-    title: str = None
-    description: str = None
-    creation_date: datetime.date = None
-    file_path: str = None
-    rating: float = field(default=0.0)
-    type: str = field(default="movie")
-    created_at: datetime = field(default=now)
-    updated_at: datetime = field(default=now)
-
-
-@dataclass
-class Genre:
-    id: uuid.UUID = field(default_factory=uuid.uuid4)
-    name: str = None
-    description: str = None
-    created_at: datetime = field(default=now)
-    updated_at: datetime = field(default=now)
-
-
-@dataclass
-class Genre_film_work:
-    id: uuid.UUID = field(default_factory=uuid.uuid4)
-    film_work_id: uuid.UUID = field(default_factory=uuid.uuid4)
-    genre_id: uuid.UUID = field(default_factory=uuid.uuid4)
-    created_at: datetime = field(default=now)
-
-
-@dataclass
-class Person:
-    id: uuid.UUID = field(default_factory=uuid.uuid4)
-    full_name: str = None
-    created_at: datetime = field(default=now)
-    updated_at: datetime = field(default=now)
-
-
-@dataclass
-class Person_film_work:
-    id: uuid.UUID = field(default_factory=uuid.uuid4)
-    film_work_id: uuid.UUID = field(default_factory=uuid.uuid4)
-    person_id: uuid.UUID = field(default_factory=uuid.uuid4)
-    role: str = field(default_factory=["actor", "producer", "director"])
-    created_at: datetime = field(default=now)
+# Связь таблицы с классом 
+tb_cls = {"film_work": Film_work, "genre": Genre, 
+ "genre_film_work": Genre_film_work,
+ "person": Person, "person_film_work": Person_film_work}
 
 
 # Общая функция для формирования листов данных SQLite
-def read_data_sqlite():
+def read_data_sqlite(table_name: str):
     with conn_sqlite(db_path) as conn:
 
         try:
+
+            cls = tb_cls[table_name]
+            column_names = [field.name for field in fields(cls)] 
+            column_names_str = ",".join(column_names)
+            column_names_mod = column_names_str.replace(
+                '''title''', '''REPLACE(REPLACE(title, "'%",""), "\'", "'") AS title'''
+                )
+            column_names_mod = column_names_mod.replace(
+                '''description''', '''REPLACE(REPLACE(description, "'%",""), "\'", "'") AS description'''
+                )
+
             curs = conn.cursor()    
-            query_fw = """
-                        SELECT id, REPLACE(REPLACE(title, "'%",""), "\'", "'") AS title, 
-                            REPLACE(REPLACE(description, "'%",""), "\'", "'") AS description, 
-                            creation_date, file_path, rating, type 
-                        FROM film_work"""
-            curs.execute(query_fw)
-            data_fw = curs.fetchall()
-            list_data_fw = []
+            query = ("""
+                    SELECT {}
+                    FROM {}""".format(column_names_mod, table_name)
+            )
+            curs.execute(query)
+            print(query)
 
-            for line in data_fw:
-                list_data_fw.append(dict(line))
+            data = curs.fetchmany(20)
+            list_data= []
 
-            conn.commit()
+            for line in data:
+                list_data.append(dict(line))
+
+            return list_data
+
         except sqlite3.OperationalError:
-            print("Введенная таблица не найдена! (см. film_work)")
+           print("Введенная таблица не найдена! (см. film_work)")
         except sqlite3.ProgrammingError:
-            print("Нет подключения к БД (см. film_work)")
+           print("Нет подключения к БД (см. film_work)")
 
-        try:
-   
-            query_g = "SELECT * FROM genre"
-            curs.execute(query_g)
-            data_g = curs.fetchall()
-            list_data_g = []
-
-            for line in data_g:
-                list_data_g.append(dict(line))
-
-            conn.commit()
-        except sqlite3.OperationalError:
-            print("Введенная таблица не найдена! (см. genre)")
-        except sqlite3.ProgrammingError:
-            print("Нет подключения к БД (см. genre)")
-
-        try:
-  
-            query_gfw = "SELECT * FROM genre_film_work"
-            curs.execute(query_gfw)
-            data_gfw = curs.fetchall()
-            list_data_gfw = []
-
-            for line in data_gfw:
-                list_data_gfw.append(dict(line))
-
-            conn.commit()
-        except sqlite3.OperationalError:
-            print("Введенная таблица не найдена! (см. genre_film_work)")
-        except sqlite3.ProgrammingError:
-            print("Нет подключения к БД (см. genre_film_work)")
-            
-        try:
-  
-            query_p = "SELECT * FROM person"
-            curs.execute(query_p)
-            data_p = curs.fetchall()
-            list_data_p = []
-
-            for line in data_p:
-                list_data_p.append(dict(line))
-            
-            conn.commit()    
-        except sqlite3.OperationalError:
-            print("Введенная таблица не найдена! (см. person)")
-        except sqlite3.ProgrammingError:
-            print("Нет подключения к БД (см. person)")
-            
-        try:
-  
-            query_pfw = "SELECT * FROM person_film_work"
-            curs.execute(query_pfw)
-            data_pfw = curs.fetchall()
-            list_data_pfw = []
-
-            for line in data_pfw:
-                list_data_pfw.append(dict(line))
-      
-        except sqlite3.OperationalError:
-            print("Введенная таблица не найдена! (см. person_film_work)")
-        except sqlite3.ProgrammingError:
-            print("Нет подключения к БД (см. person_film_work)")
-
-
-    return list_data_fw, list_data_g, list_data_gfw,\
-            list_data_p, list_data_pfw
     
     
 def create_data_list():
 
     # Сначала формируем независимые от других таблиц
-    data = read_data_sqlite()
 
-    data_genre = data[1]
+    data_genre = read_data_sqlite('genre')
+
     genre_list = []
     genre_ids = []
 
@@ -192,7 +92,7 @@ def create_data_list():
         genre_list.append(Genre(**genre))
         genre_ids.append(genre["id"])
 
-    data_person = data[3]
+    data_person = read_data_sqlite('person')
     person_list = []
     person_ids = []
 
@@ -200,7 +100,8 @@ def create_data_list():
         person_list.append(Person(**person))
         person_ids.append(person["id"])
 
-    data_film_work = data[0]
+    data_film_work = read_data_sqlite('film_work')
+    #print(data_film_work)
     film_work_list = []
     film_works_ids = []
 
@@ -209,12 +110,12 @@ def create_data_list():
         film_works_ids.append(film_work["id"])
 
     # Теперь связующие таблицы, проверяя связь между записями
-    data_genre_film_work = data[2]
+    data_genre_film_work = read_data_sqlite('genre_film_work')
     genre_film_work_list = []
     stop_list_gfw = []
     
     for genre_film_work in data_genre_film_work:
-        # print(genre_film_work['id'])
+
         if (genre_film_work["film_work_id"] in film_works_ids) & (
             genre_film_work["genre_id"] in genre_ids
         ):
@@ -225,12 +126,18 @@ def create_data_list():
     if len(stop_list_gfw) > 0:
         print("Нарушают связь между записями (genre_film_work):", stop_list_gfw)
 
-    data_person_film_work = data[4]
+    data_person_film_work = read_data_sqlite('person_film_work')
     person_film_work_list = []
     stop_list_pfw = []
     
+    # Из той двадцатки по которой проверяет, не может выполнить проверку
+     # cделать тут мэин и вызывать функции, читать, менять, проверять и записывать.
+    # айдишники комплектовать отдельной фукцией с сортировкой и только id
+    # где будут все значения
+    # добавить возможность задавать количество пачке
+
     for person_film_work in data_person_film_work:
-        # print(genre_film_work['id'])
+
         if (person_film_work["film_work_id"] in film_works_ids) & (
             person_film_work["person_id"] in person_ids
         ):
@@ -250,14 +157,15 @@ def create_data_list():
     )
 
 
-#############################################
-### Записываем в Postgres
+
+# БАхнуть мэин и из него всё запускать
+##############################################
+#### Записываем в Postgres
+#def write_data_postgres(table_name: str):
 with conn_postgres(**dsn) as conn, conn.cursor() as cursor:
     Data = create_data_list()
-
     # Запись жанров
     genres = Data[0]
-
     bind_values_g = ",".join(
         cursor.mogrify(f"(%s, %s, %s, %s, %s)", astuple(genre)).decode("utf-8")
         for genre in genres
@@ -280,10 +188,8 @@ with conn_postgres(**dsn) as conn, conn.cursor() as cursor:
         print("Ошибка записи. Ошибка синтаксиса, см. запись content.genre")
     except psycopg2.errors.NotNullViolatio:
         print("Ошибка записи. Несовпадение сущностей таблиц, см. запись content.genre")
-
     # Запись персон
     persons = Data[1]
-
     bind_values_p = ",".join(
         cursor.mogrify(f"(%s, %s, %s, %s)", astuple(person)).decode("utf-8")
         for person in persons
@@ -305,10 +211,8 @@ with conn_postgres(**dsn) as conn, conn.cursor() as cursor:
         print("Ошибка записи. Ошибка синтаксиса, см. запись content.person")
     except psycopg2.errors.NotNullViolatio:
         print("Ошибка записи. Несовпадение сущностей таблиц, см. запись content.person")
-
     # Запись фильмов
     films = Data[2]
-
     bind_values_fw = ",".join(
         cursor.mogrify(f"(%s, %s, %s, %s, %s, %s, %s, %s, %s)", astuple(film)).decode(
             "utf-8"
@@ -324,7 +228,6 @@ with conn_postgres(**dsn) as conn, conn.cursor() as cursor:
             f" file_path = EXCLUDED.file_path, rating = EXCLUDED.rating, type = EXCLUDED.type;"
             f"UPDATE content.film_work SET created = NOW(), modified = NOW()"
         )
-        
         cursor.execute(query_fw)
         conn.commit()
         print("Запись/обновление таблицы film_work выполнено")
@@ -336,10 +239,8 @@ with conn_postgres(**dsn) as conn, conn.cursor() as cursor:
         print(
             "Ошибка записи. Несовпадение сущностей таблиц, см. запись content.film_work"
         )
-
     # Запись связующей таблицы фильмов и жанров
     genres_films = Data[3]
-
     bind_values_gfw = ",".join(
         cursor.mogrify(f"(%s, %s, %s, %s)", astuple(genre_film)).decode("utf-8")
         for genre_film in genres_films
@@ -348,7 +249,7 @@ with conn_postgres(**dsn) as conn, conn.cursor() as cursor:
         query_gfw = (
             f"INSERT INTO content.genre_film_work(id, film_work_id,"
             f" genre_id, created)  "
-            f"VALUES {bind_values_gfw}ON CONFLICT (id) DO UPDATE "
+            f"VALUES {bind_values_gfw} ON CONFLICT (id) DO UPDATE "
             f" SET film_work_id = EXCLUDED.film_work_id, genre_id = EXCLUDED.genre_id;"
             f"UPDATE content.genre_film_work SET created = NOW()"
         )
@@ -363,32 +264,30 @@ with conn_postgres(**dsn) as conn, conn.cursor() as cursor:
         print(
             "Ошибка записи. Несовпадение сущностей таблиц, см. запись content.genre_film_work"
         )
-
     # Запись связующей таблицы фильмов и персон
     persons_films = Data[4]
-
+    print(persons_films)
     bind_values_pfw = ",".join(
         cursor.mogrify(f"(%s, %s, %s, %s, %s)", astuple(person_film)).decode("utf-8")
         for person_film in persons_films
     )
-    try:
-        
-        query_pfw = (
-            f"INSERT INTO content.person_film_work(id, film_work_id, person_id,"
-            f" role, created) "
-            f"VALUES {bind_values_pfw} ON CONFLICT (id) DO UPDATE "
-            f"SET film_work_id = EXCLUDED.film_work_id,person_id = EXCLUDED.person_id," 
-            f"role = EXCLUDED.role;"
-            f"UPDATE content.person_film_work SET created = NOW()"
-        )
-        cursor.execute(query_pfw)
-        print("Запись/обновление таблицы person_film_work выполнено")
-
-    except psycopg2.errors.UndefinedColumn:
-        print("Ошибка записи. Ошибка синтаксиса, см. запись content.person_film_work")
-    except psycopg2.errors.NotNulSyntaxErrorlViolatio:
-        print("Ошибка записи. Ошибка синтаксиса, см. запись content.person_film_work")
-    except psycopg2.errors.NotNullViolatio:
-        print(
-            "Ошибка записи. Несовпадение сущностей таблиц, см. запись content.person_film_work"
-        )
+    print(bind_values_pfw)
+    #try:
+    query_pfw = (
+        f"INSERT INTO content.person_film_work(id, film_work_id, person_id,"
+        f" role, created) "
+        f"VALUES {bind_values_pfw} ON CONFLICT (id) DO UPDATE "
+        f"SET film_work_id = EXCLUDED.film_work_id, person_id = EXCLUDED.person_id," 
+        f"role = EXCLUDED.role;"
+        f"UPDATE content.person_film_work SET created = NOW()"
+    )
+    cursor.execute(query_pfw)
+    print("Запись/обновление таблицы person_film_work выполнено")
+    #except psycopg2.errors.UndefinedColumn:
+    #    print("Ошибка записи. Ошибка синтаксиса, см. запись content.person_film_work")
+    #except psycopg2.errors.NotNulSyntaxErrorlViolatio:
+    #    print("Ошибка записи. Ошибка синтаксиса, см. запись content.person_film_work")
+    #except psycopg2.errors.NotNullViolatio:
+    #    print(
+    #        "Ошибка записи. Несовпадение сущностей таблиц, см. запись content.person_film_work"
+    #    )
