@@ -3,7 +3,10 @@ import psycopg2
 import sqlite3
 from datetime import datetime
 from contextlib import contextmanager
+from split_settings.tools import include
+from dotenv import load_dotenv
 
+load_dotenv()
 
 now = datetime.utcnow()
 db_path = os.environ.get("DB_NAME_SQL")
@@ -17,6 +20,7 @@ dsn = {
     "options": "-c search_path=content",
 }
 
+now = datetime.utcnow()
 
 # Подключение SQLite
 @contextmanager
@@ -75,7 +79,9 @@ def data_sqlite():
                 list_data_fw.append(tuple(line))
             conn.commit()
 
-            query_pfw = "SELECT id, film_work_id, person_id, role FROM person_film_work ORDER BY id"
+            query_pfw = """
+                SELECT id, film_work_id, person_id, role FROM person_film_work ORDER BY id
+                """
             curs.execute(query_pfw)
             data_pfw = curs.fetchall()
             list_data_pfw = []
@@ -111,7 +117,9 @@ def data_postgres():
             data_g = curs.fetchall()
             conn.commit()
 
-            query_gfw = "SELECT id, film_work_id, genre_id FROM content.genre_film_work ORDER BY id"
+            query_gfw = """
+                SELECT id, film_work_id, genre_id FROM content.genre_film_work ORDER BY id
+                """
             curs.execute(query_gfw)
             data_gfw = curs.fetchall()
             conn.commit()
@@ -125,7 +133,9 @@ def data_postgres():
             data_fw = curs.fetchall()
             conn.commit()
 
-            query_pfw = "SELECT id, film_work_id, person_id, role FROM person_film_work ORDER BY id"
+            query_pfw = """
+                    SELECT id, film_work_id, person_id, role FROM person_film_work ORDER BY id
+                """
             curs.execute(query_pfw)
             data_pfw = curs.fetchall()
             conn.commit()
@@ -178,6 +188,7 @@ def сheck_integrity():
         if dl[i] != dp[i]:
             print('Следующие строчки не совпадают', dl[i], dp[i])
             count += 1
+            
     print('Всего несовпавших значений', count)
 
 

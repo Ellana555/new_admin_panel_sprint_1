@@ -1,5 +1,7 @@
 import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
 db_path = os.environ.get("DB_NAME_SQL")
 
