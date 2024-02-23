@@ -1,0 +1,17 @@
+2024-02-24 01:24:12,351 INFO Writing to the table genre. Quantity: 20
+2024-02-24 01:24:12,361 INFO Writing to the table genre. Quantity: 20
+2024-02-24 01:24:12,447 INFO Writing to the table person. Quantity: 1000
+2024-02-24 01:24:12,547 INFO Writing to the table person. Quantity: 1000
+2024-02-24 01:24:12,637 INFO Writing to the table person. Quantity: 1000
+2024-02-24 01:24:12,728 INFO Writing to the table person. Quantity: 1000
+2024-02-24 01:24:12,803 INFO Writing to the table person. Quantity: 1000
+2024-02-24 01:24:12,907 INFO Writing to the table film_work. Quantity: 1000
+2024-02-24 01:24:12,972 INFO Writing to the table person_film_work. Quantity: 1000
+2024-02-24 01:24:13,055 INFO Writing to the table person_film_work. Quantity: 1000
+2024-02-24 01:24:13,137 INFO Writing to the table person_film_work. Quantity: 1000
+2024-02-24 01:24:13,213 INFO Writing to the table person_film_work. Quantity: 1000
+2024-02-24 01:24:13,292 INFO Writing to the table person_film_work. Quantity: 1000
+2024-02-24 01:24:13,420 INFO Writing to the table person_film_work. Quantity: 1000
+2024-02-24 01:24:13,449 INFO Writing to the table genre_film_work. Quantity: 1000
+2024-02-24 01:24:13,501 INFO Writing to the table genre_film_work. Quantity: 1000
+2024-02-24 01:24:13,592 INFO Writing to the table genre_film_work. Quantity: 1000

@@ -9,10 +9,10 @@ from components.classes_module import (
 import logging
 
 logging.basicConfig(
-    level=logging.DEBUG,
-    filename="py_log.log",
-    filemode="w",
-    format="%(asctime)s %(levelname)s %(message)s",
+    level = logging.INFO,
+    filename = "py_log.log",
+    filemode = "w",
+    format = "%(asctime)s %(levelname)s %(message)s",
 )
 
 import psycopg2

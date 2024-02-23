@@ -10,3 +10,4 @@ venv		       # Игнорировать Python - окружение
 __pycache__            
 components/.env
 tests.env
+.env
