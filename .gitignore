@@ -7,5 +7,5 @@ app/**/*.log           # Игнорировать log-файлы в app- и по
 venv		       # Игнорировать Python - окружение 
 .vscode
 .git
-__pycache__     
+**/__pycache__     
 
