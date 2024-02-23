@@ -3,11 +3,9 @@ app/ignored/           # Игнорировать папку
 *.py[cdo]              # Игнорировать все файлы с расширением pyc/pyd/pyo
 app/**/*.log           # Игнорировать log-файлы в app- и поддиректориях 
 !app/main.log          # ... кроме файла main.log 
-config/.env            # Игнорировать окружение паролей
+.env                   # Игнорировать окружение паролей
 venv		       # Игнорировать Python - окружение 
 .vscode
 .git
-__pycache__            
-components/.env
-tests.env
-.env
+__pycache__     
+
