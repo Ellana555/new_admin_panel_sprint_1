@@ -22,6 +22,7 @@ dsn = {
 
 now = datetime.utcnow()
 
+
 # Подключение SQLite
 @contextmanager
 def conn_sqlite(db_path: str):
@@ -47,7 +48,6 @@ def conn_postgres(**dsn):
 def data_sqlite():
     with conn_sqlite(db_path) as conn:
         try:
-
             curs = conn.cursor()
             query_g = "SELECT id, name, description FROM genre ORDER BY id"
             curs.execute(query_g)
@@ -57,7 +57,9 @@ def data_sqlite():
                 list_data_g.append(tuple(line))
             conn.commit()
 
-            query_gfw = "SELECT id, film_work_id, genre_id FROM genre_film_work ORDER BY id"
+            query_gfw = (
+                "SELECT id, film_work_id, genre_id FROM genre_film_work ORDER BY id"
+            )
             curs.execute(query_gfw)
             data_gfw = curs.fetchall()
             list_data_gfw = []
@@ -70,7 +72,7 @@ def data_sqlite():
                             file_path, rating, type 
                         FROM film_work
                         ORDER BY id """
-            
+
             curs.execute(query_fw)
             data_fw = curs.fetchall()
             list_data_fw = []
@@ -99,7 +101,7 @@ def data_sqlite():
                 list_data_p.append(tuple(line))
             conn.commit()
 
-            return list_data_g, list_data_gfw, list_data_fw, list_data_pfw,  list_data_p
+            return list_data_g, list_data_gfw, list_data_fw, list_data_pfw, list_data_p
         except sqlite3.OperationalError:
             print("Введенная таблица не найдена!")
         except sqlite3.ProgrammingError:
@@ -110,7 +112,6 @@ def data_sqlite():
 def data_postgres():
     with conn_postgres(**dsn) as conn, conn.cursor() as curs:
         try:
-
             curs = conn.cursor()
             query_g = "SELECT id, name, description FROM content.genre ORDER BY id"
             curs.execute(query_g)
@@ -144,7 +145,7 @@ def data_postgres():
             curs.execute(query_p)
             data_p = curs.fetchall()
             conn.commit()
-            return data_g, data_gfw, data_fw, data_pfw,  data_p
+            return data_g, data_gfw, data_fw, data_pfw, data_p
         except psycopg2.errors.UndefinedColumn:
             print("Ошибка записи. Ошибка синтаксиса, см. запись")
         except psycopg2.errors.NotNulSyntaxErrorlViolatio:
@@ -153,9 +154,7 @@ def data_postgres():
             print("Ошибка записи. Несовпадение сущностей таблиц, см. запись")
 
 
-
 def сheck_quantity():
- 
     data_lite = data_sqlite()
     data_post = data_postgres()
 
@@ -164,11 +163,10 @@ def сheck_quantity():
     assert len(data_lite[2]) == len(data_post[2])
     assert len(data_lite[3]) == len(data_post[3])
     assert len(data_lite[4]) == len(data_post[4])
-    print('Кол-во строк в таблицах совпадает.')
+    print("Кол-во строк в таблицах совпадает.")
 
 
 def сheck_integrity():
-
     data_lite = data_sqlite()
     data_post = data_postgres()
 
@@ -177,7 +175,7 @@ def сheck_integrity():
     assert data_lite[2] == data_post[2]
     assert data_lite[3] == data_post[3]
     assert data_lite[4] == data_post[4]
-    print('Строки в таблицах совпадают.')
+    print("Строки в таблицах совпадают.")
 
     # Для сверки несовпавших значений (поменять на номер)
     dl = data_lite[1]
@@ -186,13 +184,11 @@ def сheck_integrity():
 
     for i in range(len(data_lite[1])):
         if dl[i] != dp[i]:
-            print('Следующие строчки не совпадают', dl[i], dp[i])
+            print("Следующие строчки не совпадают", dl[i], dp[i])
             count += 1
-            
-    print('Всего несовпавших значений', count)
+
+    print("Всего несовпавших значений", count)
 
 
 сheck_quantity()
 сheck_integrity()
-
-

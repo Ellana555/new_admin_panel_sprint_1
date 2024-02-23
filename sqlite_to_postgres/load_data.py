@@ -1,21 +1,25 @@
+from components.config import db_path, dsn
+from components.classes_module import (
+    Film_work,
+    Genre,
+    Genre_film_work,
+    Person,
+    Person_film_work,
+)
 import logging
-logging.basicConfig(level = logging.INFO, filename="py_log.log", filemode="w",
-                    format="%(asctime)s %(levelname)s %(message)s")
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    filename="py_log.log",
+    filemode="w",
+    format="%(asctime)s %(levelname)s %(message)s",
+)
 
 import psycopg2
 import sqlite3
 from contextlib import contextmanager
 from dataclasses import astuple
-from split_settings.tools import include
-
-
-include(
-    "components\config.py",
-)
-
-include(
-    "components\classes_module.py",
-)
+from dataclasses import fields
 
 
 # Подключение SQLite
@@ -83,7 +87,9 @@ def read_data_sqlite(table_name: str, count: int):
                         list_data.append(cls(**table_name))
 
                     write_data_postgres(list_data, len_table, name_t, column_names_str)
-                    logging.info("Writing to the table " + name_t + ". Quantity: " + str(count))
+                    logging.info(
+                        "Writing to the table " + name_t + ". Quantity: " + str(count)
+                    )
                     conn.commit()
                 else:
                     break
@@ -117,15 +123,22 @@ def write_data_postgres(list_data, len_table, name_t, column_names_str):
                 """.format(
                 name_t, column_names_mod, bind_values, name_t
             )
+
             cursor.execute(query)
+            conn.commit()
 
         except psycopg2.errors.UndefinedColumn:
             logging.error("Recording error. Syntax error, see the content." + name_t)
-        except psycopg2.errors.NotNulSyntaxErrorlViolatio:
+        except psycopg2.errors.SyntaxError:
             logging.error("Recording error. Syntax error, see the content." + name_t)
-        except psycopg2.errors.NotNullViolatio:
-            logging.error("Recording error.\
-                    The discrepancy between the entities of the tables, see content." + name_t)
+        except psycopg2.errors.NotNullViolation:
+            logging.error(
+                "Recording error.\
+                    The discrepancy between the entities of the tables, see content."
+                + name_t
+            )
+        except psycopg2.errors.ForeignKeyViolation:
+            logging.DEBUG("ERROR KEY - " + name_t)
 
 
 read_data_sqlite("genre", 20)
