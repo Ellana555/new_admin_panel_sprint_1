@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS content.film_work (
     title TEXT NOT NULL,
     description TEXT,
     creation_date DATE,
+	file_path TEXT,
     rating FLOAT,
     type TEXT not null,
     created timestamp with time zone,
