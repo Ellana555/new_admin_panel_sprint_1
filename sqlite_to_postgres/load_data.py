@@ -95,9 +95,9 @@ def read_data_sqlite(table_name: str, count: int):
                     break
 
         except sqlite3.OperationalError:
-            logging.warning("The entered table was not found! (see film_work)")
+            logging.warning("The entered table was not found!")
         except sqlite3.ProgrammingError:
-            logging.warning("There is no connection to the database (see film_work)")
+            logging.debug("There is no connection to the database.")
 
 
 ##############################################
@@ -128,17 +128,17 @@ def write_data_postgres(list_data, len_table, name_t, column_names_str):
             conn.commit()
 
         except psycopg2.errors.UndefinedColumn:
-            logging.error("Recording error. Syntax error, see the content." + name_t)
+            logging.exception("Recording error. Syntax error, see the content." + name_t)
         except psycopg2.errors.SyntaxError:
-            logging.error("Recording error. Syntax error, see the content." + name_t)
+            logging.exception("Recording error. Syntax error, see the content." + name_t)
         except psycopg2.errors.NotNullViolation:
-            logging.error(
+            logging.exception(
                 "Recording error.\
                     The discrepancy between the entities of the tables, see content."
                 + name_t
             )
         except psycopg2.errors.ForeignKeyViolation:
-            logging.DEBUG("ERROR KEY - " + name_t)
+            logging.debug("ERROR KEY - " + name_t)
 
 
 read_data_sqlite("genre", 20)
